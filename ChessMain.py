@@ -1,7 +1,7 @@
-from Chess import ChessEngine
+import ChessEngine
 import pygame as p
 
-WIDTH = HEIGHT = 800
+WIDTH = HEIGHT =800
 DIMENSION = 8
 SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
@@ -51,8 +51,10 @@ def main():
                     if move in validMoves:
                         gs.makeMove(move)
                         moveMade = True
-                    sqSelected = () #reset
-                    playerClicks = []
+                        sqSelected = () #reset
+                        playerClicks = []
+                    else:
+                        playerClicks = [sqSelected]
 
             elif e.type == p.KEYDOWN:
                     if e.key == p.K_z:
