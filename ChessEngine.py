@@ -1,4 +1,4 @@
-class GameState():
+class GameState:
     def __init__(self):
         # 8x8 board 2d list, 2 characters for each element
         # 1st character is color
@@ -19,12 +19,20 @@ class GameState():
                               'K': self.getKingMoves, 'Q': self.getQueenMoves, 'N': self.getKnightMoves}
         self.whiteToMove = True
         self.moveLog = []
+        self.whiteKingLocation = [7, 4]
+        self.blackKingLocation = [0, 4]
+        self.checkMate = False
+        self.stateMate = False # King has no valid move but not in check
 
     def makeMove(self, move):
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move) #we can undo later
         self.whiteToMove = not self.whiteToMove #swap turn
+        if move.pieceMoved == "wK": #tracking king location
+            self.whiteKingLocation = (move.endRow,move.endCol)
+        if move.pieceMoved == "bK":
+            self.blackKingLocation = (move.endRow,move.endCol)
 
     def Undo(self):
         if len(self.moveLog) != 0:
@@ -32,9 +40,51 @@ class GameState():
             self.board[move.startRow][move.startCol] = move.pieceMoved
             self.board[move.endRow][move.endCol] = move.pieceCaptured
             self.whiteToMove = not self.whiteToMove
-
+        if move.pieceMoved == "wK":
+            self.whiteKingLocation = (move.startRow,move.startCol)
+        if move.pieceMoved == "bK":
+            self.blackKingLocation = (move.startRow,move.startCol)
     def getValidMoves(self):
-        return self.getAllValidMoves()
+        #1) generate all possible moves
+        moves = self.getAllValidMoves()
+        #2) make move for each move
+        for i in range(len(moves)-1,-1,-1):
+            self.makeMove(moves[i])
+            self.whiteToMove = not self.whiteToMove #check enemy move
+        #3) generate all enemy's moves
+        #4) see if enemy can attack king
+            if self.InCheck():
+                moves.remove(moves[i])#5) if king can be attack ==> not a valid move
+            self.whiteToMove = not self.whiteToMove
+            self.Undo()
+
+        if len(moves) == 0:
+            if self.InCheck():
+                self.checkMate = True
+                print("Check Mate")
+            else:
+                self.stateMate = True
+                print("State Mate")
+        else:
+            self.checkMate = False
+            self.stateMate = False
+
+        return moves
+
+    def InCheck(self):
+        if self.whiteToMove:
+            return self.sqUnderAttack(self.whiteKingLocation[0], self.whiteKingLocation[1])
+        else:
+            return self.sqUnderAttack(self.blackKingLocation[0], self.blackKingLocation[1])
+
+    def sqUnderAttack(self, r, c):
+        self.whiteToMove = not self.whiteToMove #switch turn
+        enemyMove = self.getAllValidMoves()
+        self.whiteToMove = not self.whiteToMove #check if next turn can enemy attack king
+        for move in enemyMove:
+            if move.endRow == r and move.endCol == c:
+                return True
+        return False
 
     def getAllValidMoves(self):
         moves = []
@@ -121,7 +171,7 @@ class GameState():
             endCol = c + d[1]
             if 0 <= endCol < 8 and 0 <= endRow < 8:
                 endPiece = self.board[endRow][endCol]
-                if endPiece != ally:
+                if endPiece[0] != ally:
                     moves.append(Move((r, c), (endRow, endCol), self.board))
 
     def getQueenMoves(self, r, c, moves):
