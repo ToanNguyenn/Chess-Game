@@ -15,8 +15,8 @@ class GameState:
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
         ]
 
-        self.moveFunctions = {'p': self.getPawnMoves, 'B': self.getBishopMoves, 'R': self.getRookMoves,
-                              'K': self.getKingMoves, 'Q': self.getQueenMoves, 'N': self.getKnightMoves}
+        self.moveFunctions = {'K': self.getKingMoves, 'B': self.getBishopMoves, 'R': self.getRookMoves,
+                              'p': self.getPawnMoves, 'Q': self.getQueenMoves, 'N': self.getKnightMoves}
         self.whiteToMove = True
         self.moveLog = []
         self.whiteKingLocation = [7, 4]
@@ -35,7 +35,6 @@ class GameState:
             self.whiteKingLocation = (move.endRow,move.endCol)
         elif move.pieceMoved == "bK":
             self.blackKingLocation = (move.endRow,move.endCol)
-
         #Pawn promotion to Queen
         if move.isPawnpromotion:
             self.board[move.endRow][move.endCol] = move.pieceMoved[0] + "Q"
@@ -43,7 +42,6 @@ class GameState:
         #En passant move
         if move.isEnpassantMove:
             self.board[move.startRow][move.endCol] = "--" # xóa vị trí tốt bị bắt qua đường
-            print("sdgfbgdfgdtfghftghdfb")
 
         if move.pieceMoved[1] == "p" and abs(move.startRow - move.endRow) == 2:
             self.enpassantPossible = ((move.startRow + move.endRow)//2, move.startCol)
@@ -67,10 +65,10 @@ class GameState:
         if move.isEnpassantMove:
             self.board[move.endRow][move.endCol] = "--" # trả vị trí bắt tốt về trống
             self.board[move.startRow][move.endCol] = move.pieceCaptured # trả vị trí tốt bị bắt về lại tốt
-            self.enpassantPossible = (move.endRow,move.endCol) # trả lại vị trí en passant có thể bắt
+            self.enpassantPossible = (move.endRow, move.endCol) # trả lại vị trí en passant có thể bắt
 
         # undo 2 square pawn back
-        if move.pieceMoved[1] == "p" and abs(move.startRow - move.endCol) == 2:
+        if move.pieceMoved[1] == "p" and abs(move.startRow - move.endRow) == 2:
             self.enpassantPossible = ()
 
     def getValidMoves(self):
@@ -130,16 +128,16 @@ class GameState:
     def getPawnMoves(self, r, c, moves):
         if self.whiteToMove:
             if self.board[r-1][c] == '--':
-                moves.append(Move((r,c), (r-1,c), self.board))
+                moves.append(Move((r, c), (r-1, c), self.board))
                 if r == 6 and self.board[r-2][c] == '--':
-                    moves.append(Move((r,c), (r-2,c), self.board))
+                    moves.append(Move((r, c), (r-2, c), self.board))
 
-            if c-1 >= 0:
-                if self.board[r-1][c-1][0] == 'b':
+            if c-1 >= 0: #capture to the left
+                if self.board[r-1][c-1][0] == 'b': # index cua r nguoc voi index notation
                     moves.append(Move((r, c), (r-1, c-1), self.board))
                 elif (r-1, c-1) == self.enpassantPossible:
                     moves.append(Move((r, c), (r-1, c-1), self.board, isEnpassantMove=True))
-            if c+1 <= 7:
+            if c+1 <= 7: #capture to the right
                 if self.board[r-1][c+1][0] == 'b':
                     moves.append(Move((r, c), (r-1, c+1), self.board))
                 elif (r-1, c+1) == self.enpassantPossible:
@@ -237,7 +235,7 @@ class Move:
                    "e": 4, "f": 5, "g": 6, "h": 7}
     colstoFiles = {v: k for k, v in filestoCols.items()}
 
-    def __init__(self, startSq, endSq, board, isEnpassantMove = False):
+    def __init__(self, startSq, endSq, board, isEnpassantMove=False):
         self.startRow = startSq[0]
         self.startCol = startSq[1]
         self.endRow = endSq[0]
@@ -256,7 +254,7 @@ class Move:
             self.pieceCaptured = "wp" if self.pieceMoved == "bp" else "bp"
 
         self.MoveID = self.startRow*1000 + self.startCol*100 + self.endRow*10 + self.endCol
-        print(self.MoveID)
+
     '''
     Overriding the oquals method'''
 
