@@ -23,7 +23,7 @@ class GameState:
         self.blackKingLocation = [0, 4]
         self.checkMate = False
         self.stateMate = False # King has no valid move but not in check
-
+        self.enpassantPossible = ()
     def makeMove(self, move):
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
@@ -31,8 +31,10 @@ class GameState:
         self.whiteToMove = not self.whiteToMove #swap turn
         if move.pieceMoved == "wK": #tracking king location
             self.whiteKingLocation = (move.endRow,move.endCol)
-        if move.pieceMoved == "bK":
+        elif move.pieceMoved == "bK":
             self.blackKingLocation = (move.endRow,move.endCol)
+        if move.isPawnpromotion:
+            self.board[move.endRow][move.endCol] = move.pieceMoved[0] + "Q"
 
     def Undo(self):
         if len(self.moveLog) != 0:
@@ -111,7 +113,7 @@ class GameState:
                 if self.board[r-1][c+1][0] == 'b':
                     moves.append((Move((r, c), (r-1, c+1), self.board)))
 
-        if not self.whiteToMove:
+        else:
             if self.board[r+1][c] == '--':
                 moves.append(Move((r, c), (r+1,c), self.board))
                 if r == 1 and self.board[r+2][c] == '--':
@@ -207,6 +209,9 @@ class Move:
         self.endCol = endSq[1]
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
+        self.isPawnpromotion = False
+        if (self.pieceMoved == "wp" and self.endRow == 0) or  (self.pieceMoved == "bp" and self.endRow == 7):
+            self.isPawnpromotion = True
         self.MoveID = self.startRow*1000 + self.startCol*100 + self.endRow*10 + self.endCol
         print(self.MoveID)
     '''
